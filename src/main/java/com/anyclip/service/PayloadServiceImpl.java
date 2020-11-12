@@ -101,22 +101,11 @@ public class PayloadServiceImpl implements PayloadService {
 
 		File file = new File(LOGS_DIR + fileName);
 
-		FileWriter fw = null;
-		BufferedWriter bw = null;
+		// try-with-resources
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter(file, true))) {
 
-		try {
-
-			fw = new FileWriter(file, true);
-			bw = new BufferedWriter(fw);
-			
 			bw.write(String.format("%s%s", line, System.lineSeparator()));
-			
-			bw.close();
-			fw.close();
-			
-			bw = null;
-			fw = null;
-			
+
 			counter.incrementAndGet();
 
 			if (LOGGER.isDebugEnabled()) {
@@ -128,46 +117,6 @@ public class PayloadServiceImpl implements PayloadService {
 			String message = String.format("failed to write line '%s' to file '%s'. counter: %d", line, fileName, counter.get());
 
 			throw new PayloadException(message, t);
-
-		} finally {
-			
-			if (LOGGER.isDebugEnabled()) {
-				
-				String bwStr = (bw == null) ? "bw == null" : "bw != null";
-				String fwStr = (fw == null) ? "fw == null" : "fw != null";
-				
-				LOGGER.debug("{}, {}", bwStr, fwStr);
-			}
-
-			try {
-
-				if (bw != null) {
-
-					bw.close();
-				}
-
-			} catch (Throwable t) {
-
-				String message = String.format("failed to close bw (BufferedWriter). file name: '%s'.", fileName);
-
-				LOGGER.error(message, t);
-
-			} finally {
-
-				try {
-
-					if (fw != null) {
-
-						fw.close();
-					}
-
-				} catch (Throwable t) {
-
-					String message = String.format("failed to close fw (FileWriter). file name: '%s'.", fileName);
-
-					LOGGER.error(message, t);
-				}
-			}
 		}
 	}
 }
